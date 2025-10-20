@@ -1,0 +1,138 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Badlands Key Shop (Demo)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body { font-family: system-ui, Arial; background:#111; color:#eee; display:flex; align-items:center; justify-content:center; height:100vh; margin:0; }
+    .card { background:#1f1f2a; padding:20px; border-radius:10px; width:380px; box-shadow:0 6px 30px rgba(0,0,0,0.6);}
+    h1{ margin:0 0 8px 0; color:#f39c12; text-align:center;}
+    .row{ display:flex; gap:8px; margin:10px 0; }
+    button{ background:#2d3b4f; color:#fff; border:none; padding:10px 12px; border-radius:6px; cursor:pointer;}
+    .big{ font-size:18px; padding:12px; }
+    input{ background:#0f1620; color:#eee; border:1px solid #2b3542; padding:8px; border-radius:6px; flex:1}
+    .keybox{ background:#0b1220; padding:10px; border-radius:6px; font-family:monospace; word-break:break-all}
+    .muted{ color:#97a1b1; font-size:13px }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Badlands Key Shop (Demo)</h1>
+
+    <div class="row">
+      <div style="flex:1">
+        <div class="muted">Credits (fake)</div>
+        <div id="credits" style="font-size:24px; margin-top:4px">0</div>
+      </div>
+      <div style="min-width:120px">
+        <div class="muted">Actions</div>
+        <div style="margin-top:6px">
+          <button id="addCredits" class="big">Add Credits</button>
+        </div>
+      </div>
+    </div>
+
+    <hr style="border-color:#222">
+
+    <div class="muted">Buy a key (cost: 10 credits)</div>
+    <div style="margin-top:8px" class="row">
+      <button id="buyKey" style="flex:1">Buy Key</button>
+      <button id="regen" title="Generate new without buying">Gen</button>
+    </div>
+
+    <div style="margin-top:12px">
+      <div class="muted">Your key (copy/paste into game)</div>
+      <div id="keyBox" class="keybox">No key yet</div>
+      <div style="margin-top:8px" class="muted">Or paste a key here to validate</div>
+      <div class="row" style="margin-top:6px">
+        <input id="pasteKey" placeholder="Paste key to test" />
+        <button id="checkBtn">Check</button>
+      </div>
+      <div id="checkRes" class="muted" style="margin-top:6px"></div>
+    </div>
+
+    <hr style="border-color:#222">
+    <div class="muted" style="text-align:center; font-size:13px">This is a demo: keys and credits are fake and stored in your browser only.</div>
+  </div>
+
+<script>
+// === Demo key scheme (shared with game) ===
+// This is intentionally simple: key = <randomPart>-<checksum>
+// checksum = sum of char codes of randomPart modulo 1000, base36
+// Keep the same functions in your game to validate.
+
+function randPart(len=8){
+  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; // exclude confusing chars
+  let s = '';
+  for(let i=0;i<len;i++) s += chars[Math.floor(Math.random()*chars.length)];
+  return s;
+}
+function checksum(str){
+  let sum = 0;
+  for(let i=0;i<str.length;i++) sum += str.charCodeAt(i);
+  return (sum % 1000).toString(36).toUpperCase();
+}
+function makeKey(){
+  const p = randPart(10);
+  return p + '-' + checksum(p);
+}
+function validateKey(key){
+  if(typeof key !== 'string') return false;
+  key = key.trim().toUpperCase();
+  const parts = key.split('-');
+  if(parts.length !== 2) return false;
+  return checksum(parts[0]) === parts[1];
+}
+
+// === UI logic ===
+const creditsEl = document.getElementById('credits');
+const keyBox = document.getElementById('keyBox');
+const pasteKey = document.getElementById('pasteKey');
+const checkRes = document.getElementById('checkRes');
+
+let credits = Number(localStorage.getItem('demoCredits') || 0);
+let lastKey = localStorage.getItem('demoLastKey') || '';
+
+function render(){
+  creditsEl.textContent = credits;
+  keyBox.textContent = lastKey || 'No key yet';
+}
+render();
+
+document.getElementById('addCredits').addEventListener('click', () => {
+  credits += 10; // add 10 fake credits
+  localStorage.setItem('demoCredits', credits);
+  render();
+});
+document.getElementById('buyKey').addEventListener('click', () => {
+  if(credits < 10){
+    alert('Not enough credits. Click Add Credits to get fake credits.');
+    return;
+  }
+  credits -= 10;
+  localStorage.setItem('demoCredits', credits);
+  lastKey = makeKey();
+  localStorage.setItem('demoLastKey', lastKey);
+  render();
+});
+document.getElementById('regen').addEventListener('click', () => {
+  lastKey = makeKey();
+  localStorage.setItem('demoLastKey', lastKey);
+  render();
+});
+document.getElementById('checkBtn').addEventListener('click', () => {
+  const k = pasteKey.value.trim();
+  if(!k){ checkRes.textContent = 'Paste a key first'; return; }
+  checkRes.textContent = validateKey(k) ? 'VALID' : 'INVALID';
+});
+
+// Handy: show key in nice selectable block
+keyBox.addEventListener('click', () => {
+  if(lastKey){
+    navigator.clipboard?.writeText(lastKey).then(()=> alert('Key copied to clipboard'));
+  }
+});
+</script>
+</body>
+</html>
