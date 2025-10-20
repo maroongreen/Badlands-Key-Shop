@@ -1,138 +1,130 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>Badlands Key Shop (Demo)</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <style>
-    body { font-family: system-ui, Arial; background:#111; color:#eee; display:flex; align-items:center; justify-content:center; height:100vh; margin:0; }
-    .card { background:#1f1f2a; padding:20px; border-radius:10px; width:380px; box-shadow:0 6px 30px rgba(0,0,0,0.6);}
-    h1{ margin:0 0 8px 0; color:#f39c12; text-align:center;}
-    .row{ display:flex; gap:8px; margin:10px 0; }
-    button{ background:#2d3b4f; color:#fff; border:none; padding:10px 12px; border-radius:6px; cursor:pointer;}
-    .big{ font-size:18px; padding:12px; }
-    input{ background:#0f1620; color:#eee; border:1px solid #2b3542; padding:8px; border-radius:6px; flex:1}
-    .keybox{ background:#0b1220; padding:10px; border-radius:6px; font-family:monospace; word-break:break-all}
-    .muted{ color:#97a1b1; font-size:13px }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Badlands Key Store</title>
+<style>
+  body {
+    background: #0f0f10;
+    color: #f1f1f1;
+    font-family: "Segoe UI", sans-serif;
+    text-align: center;
+    padding-top: 60px;
+  }
+  h1 {
+    color: #f39c12;
+    font-size: 48px;
+    margin-bottom: 10px;
+  }
+  p {
+    color: #bbb;
+    font-size: 16px;
+  }
+  .credits {
+    margin: 30px auto;
+    background: #1a1a1a;
+    border-radius: 10px;
+    width: 300px;
+    padding: 20px;
+    box-shadow: 0 0 15px #000;
+  }
+  .credits h2 {
+    color: #2ecc71;
+  }
+  button {
+    background: #2c3e50;
+    color: white;
+    border: none;
+    padding: 12px 26px;
+    margin: 8px;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: 0.25s;
+  }
+  button:hover {
+    background: #34495e;
+  }
+  .keybox {
+    margin-top: 25px;
+    background: #111;
+    border: 1px solid #333;
+    display: inline-block;
+    padding: 14px 24px;
+    border-radius: 8px;
+    font-size: 18px;
+    color: #f1c40f;
+  }
+  /* secret area for Add Credits */
+  #secretArea {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    width: 120px;
+    height: 40px;
+    opacity: 0.03; /* barely visible */
+    cursor: pointer;
+  }
+</style>
 </head>
 <body>
-  <div class="card">
-    <h1>Badlands Key Shop (Demo)</h1>
+  <h1>The Badlands Store</h1>
+  <p>Purchase a game key using in-site credits. (Demo system)</p>
 
-    <div class="row">
-      <div style="flex:1">
-        <div class="muted">Credits (fake)</div>
-        <div id="credits" style="font-size:24px; margin-top:4px">0</div>
-      </div>
-      <div style="min-width:120px">
-        <div class="muted">Actions</div>
-        <div style="margin-top:6px">
-          <button id="addCredits" class="big">Add Credits</button>
-        </div>
-      </div>
-    </div>
-
-    <hr style="border-color:#222">
-
-    <div class="muted">Buy a key (cost: 10 credits)</div>
-    <div style="margin-top:8px" class="row">
-      <button id="buyKey" style="flex:1">Buy Key</button>
-      <button id="regen" title="Generate new without buying">Gen</button>
-    </div>
-
-    <div style="margin-top:12px">
-      <div class="muted">Your key (copy/paste into game)</div>
-      <div id="keyBox" class="keybox">No key yet</div>
-      <div style="margin-top:8px" class="muted">Or paste a key here to validate</div>
-      <div class="row" style="margin-top:6px">
-        <input id="pasteKey" placeholder="Paste key to test" />
-        <button id="checkBtn">Check</button>
-      </div>
-      <div id="checkRes" class="muted" style="margin-top:6px"></div>
-    </div>
-
-    <hr style="border-color:#222">
-    <div class="muted" style="text-align:center; font-size:13px">This is a demo: keys and credits are fake and stored in your browser only.</div>
+  <div class="credits">
+    <h2 id="creditCount">Credits: 0</h2>
+    <button id="buyKey">Buy Game Key (Costs 1 Credit)</button>
   </div>
 
+  <div id="keyContainer" class="keybox" style="display:none;"></div>
+
+  <!-- hidden clickable area -->
+  <div id="secretArea" title="shh... add credits secretly"></div>
+
 <script>
-// === Demo key scheme (shared with game) ===
-// This is intentionally simple: key = <randomPart>-<checksum>
-// checksum = sum of char codes of randomPart modulo 1000, base36
-// Keep the same functions in your game to validate.
+let credits = parseInt(localStorage.getItem("credits") || "0");
+let keys = JSON.parse(localStorage.getItem("keys") || "[]");
 
-function randPart(len=8){
-  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; // exclude confusing chars
-  let s = '';
-  for(let i=0;i<len;i++) s += chars[Math.floor(Math.random()*chars.length)];
-  return s;
+function updateCreditDisplay(){
+  document.getElementById("creditCount").innerText = "Credits: " + credits;
 }
+
 function checksum(str){
-  let sum = 0;
-  for(let i=0;i<str.length;i++) sum += str.charCodeAt(i);
-  return (sum % 1000).toString(36).toUpperCase();
-}
-function makeKey(){
-  const p = randPart(10);
-  return p + '-' + checksum(p);
-}
-function validateKey(key){
-  if(typeof key !== 'string') return false;
-  key = key.trim().toUpperCase();
-  const parts = key.split('-');
-  if(parts.length !== 2) return false;
-  return checksum(parts[0]) === parts[1];
+  let sum=0;
+  for(let i=0;i<str.length;i++) sum+=str.charCodeAt(i);
+  return (sum%1000).toString(36).toUpperCase();
 }
 
-// === UI logic ===
-const creditsEl = document.getElementById('credits');
-const keyBox = document.getElementById('keyBox');
-const pasteKey = document.getElementById('pasteKey');
-const checkRes = document.getElementById('checkRes');
-
-let credits = Number(localStorage.getItem('demoCredits') || 0);
-let lastKey = localStorage.getItem('demoLastKey') || '';
-
-function render(){
-  creditsEl.textContent = credits;
-  keyBox.textContent = lastKey || 'No key yet';
+function generateKey(){
+  const raw = Math.random().toString(36).substring(2,8).toUpperCase();
+  return raw + "-" + checksum(raw);
 }
-render();
 
-document.getElementById('addCredits').addEventListener('click', () => {
-  credits += 10; // add 10 fake credits
-  localStorage.setItem('demoCredits', credits);
-  render();
+// Hidden credit adder
+document.getElementById("secretArea").addEventListener("click", ()=>{
+  credits++;
+  localStorage.setItem("credits", credits);
+  updateCreditDisplay();
+  alert("Credits secretly added.");
 });
-document.getElementById('buyKey').addEventListener('click', () => {
-  if(credits < 10){
-    alert('Not enough credits. Click Add Credits to get fake credits.');
+
+document.getElementById("buyKey").addEventListener("click", ()=>{
+  if(credits < 1){
+    alert("Not enough credits!");
     return;
   }
-  credits -= 10;
-  localStorage.setItem('demoCredits', credits);
-  lastKey = makeKey();
-  localStorage.setItem('demoLastKey', lastKey);
-  render();
-});
-document.getElementById('regen').addEventListener('click', () => {
-  lastKey = makeKey();
-  localStorage.setItem('demoLastKey', lastKey);
-  render();
-});
-document.getElementById('checkBtn').addEventListener('click', () => {
-  const k = pasteKey.value.trim();
-  if(!k){ checkRes.textContent = 'Paste a key first'; return; }
-  checkRes.textContent = validateKey(k) ? 'VALID' : 'INVALID';
+  credits -= 1;
+  const newKey = generateKey();
+  keys.push(newKey);
+  localStorage.setItem("credits", credits);
+  localStorage.setItem("keys", JSON.stringify(keys));
+  updateCreditDisplay();
+  document.getElementById("keyContainer").style.display = "inline-block";
+  document.getElementById("keyContainer").innerText = "Your Game Key:\n" + newKey;
 });
 
-// Handy: show key in nice selectable block
-keyBox.addEventListener('click', () => {
-  if(lastKey){
-    navigator.clipboard?.writeText(lastKey).then(()=> alert('Key copied to clipboard'));
-  }
-});
+updateCreditDisplay();
 </script>
 </body>
 </html>
