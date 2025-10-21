@@ -1,0 +1,89 @@
+body {
+  font-family: 'Poppins', sans-serif;
+  background: #0e0f11;
+  color: #e0e0e0;
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+header {
+  background: #141518;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+}
+
+header h1 {
+  color: #00bfff;
+  margin: 0;
+  font-size: 1.8rem;
+}
+
+nav {
+  margin-top: 10px;
+}
+
+nav a {
+  margin: 0 12px;
+  color: #ccc;
+  text-decoration: none;
+  transition: 0.2s;
+}
+
+nav a.active, nav a:hover {
+  color: #00bfff;
+}
+
+main {
+  flex: 1;
+  padding: 40px;
+  text-align: center;
+}
+
+.btn, button {
+  background: #00bfff;
+  border: none;
+  color: white;
+  padding: 12px 22px;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn:hover, button:hover {
+  background: #0099cc;
+}
+
+.card {
+  background: #1b1c1f;
+  border-radius: 12px;
+  padding: 20px;
+  margin: 10px;
+  display: inline-block;
+  width: 150px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.key-box {
+  margin-top: 20px;
+  font-family: monospace;
+  background: #0a0a0b;
+  padding: 10px;
+  border-radius: 8px;
+  display: inline-block;
+}
+
+.hidden {
+  display: none;
+}
+
+footer {
+  background: #141518;
+  padding: 15px;
+  text-align: center;
+  font-size: 0.9rem;
+  opacity: 0.6;
+}
