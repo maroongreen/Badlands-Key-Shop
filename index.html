@@ -1,130 +1,182 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The Badlands Key Store</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>The Badlands — Key Store (Demo)</title>
 <style>
-  body {
-    background: #0f0f10;
-    color: #f1f1f1;
-    font-family: "Segoe UI", sans-serif;
-    text-align: center;
-    padding-top: 60px;
+  :root{
+    --bg:#0f0f12;
+    --card:#16171a;
+    --accent:#f39c12;
+    --muted:#9aa4ad;
+    --glass: rgba(255,255,255,0.04);
+    --btn:#263544;
   }
-  h1 {
-    color: #f39c12;
-    font-size: 48px;
-    margin-bottom: 10px;
+  html,body{height:100%; margin:0; font-family:Inter, system-ui, Arial;}
+  body{
+    background: linear-gradient(180deg,#071021 0%, #0f1620 100%);
+    color:#e6eef6;
+    display:flex; align-items:center; justify-content:center; padding:24px;
   }
-  p {
-    color: #bbb;
-    font-size: 16px;
+  .panel{
+    width:420px; border-radius:12px; background:linear-gradient(180deg,var(--card), #0e1114);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.6); padding:22px; position:relative;
   }
-  .credits {
-    margin: 30px auto;
-    background: #1a1a1a;
-    border-radius: 10px;
-    width: 300px;
-    padding: 20px;
-    box-shadow: 0 0 15px #000;
+  h1{ margin:0; font-size:28px; color:var(--accent); text-align:left;}
+  p.small{ margin:6px 0 12px; color:var(--muted); font-size:13px;}
+  .row{ display:flex; gap:12px; align-items:center; }
+  .creditsBox{ background:var(--glass); border-radius:10px; padding:12px; flex:1; }
+  .creditsVal{ font-size:22px; color:#a9f7c7; font-weight:600; }
+  .actions{ display:flex; flex-direction:column; gap:8px; min-width:120px; }
+  button{ background:var(--btn); border:none; color:#fff; padding:10px 12px; border-radius:8px; cursor:pointer; }
+  button.primary{ background: linear-gradient(90deg,#2b6b9a,#224b6f); padding:12px 16px; font-weight:700; letter-spacing:0.4px; }
+  .keybox{ margin-top:16px; background:#07121a; border:1px solid rgba(255,255,255,0.04); padding:12px 14px; border-radius:8px; font-family:monospace; color: #ffd27f; white-space:pre-wrap; word-break:break-all; display:none; }
+  .muted{ color:var(--muted); font-size:13px; margin-top:10px; text-align:center; }
+
+  /* subtle purchase button tucked in the bottom-right of panel */
+  #purchaseCorner{
+    position:absolute; right:12px; bottom:12px; width:68px; height:28px;
+    background:transparent; border-radius:8px; display:flex; align-items:center; justify-content:center;
+    opacity:0.75; cursor:pointer; border:1px solid rgba(255,255,255,0.03);
   }
-  .credits h2 {
-    color: #2ecc71;
-  }
-  button {
-    background: #2c3e50;
-    color: white;
-    border: none;
-    padding: 12px 26px;
-    margin: 8px;
-    border-radius: 8px;
-    font-size: 16px;
-    cursor: pointer;
-    transition: 0.25s;
-  }
-  button:hover {
-    background: #34495e;
-  }
-  .keybox {
-    margin-top: 25px;
-    background: #111;
-    border: 1px solid #333;
-    display: inline-block;
-    padding: 14px 24px;
-    border-radius: 8px;
-    font-size: 18px;
-    color: #f1c40f;
-  }
-  /* secret area for Add Credits */
-  #secretArea {
-    position: fixed;
-    top: 10px;
-    left: 10px;
-    width: 120px;
-    height: 40px;
-    opacity: 0.03; /* barely visible */
-    cursor: pointer;
-  }
+  #purchaseCorner button{ background:transparent; color:var(--muted); padding:6px 8px; border-radius:6px; font-size:13px; border:1px dashed rgba(255,255,255,0.03); }
+  #purchaseCorner button:hover{ color:#fff; border-color: rgba(255,255,255,0.08); }
+
+  /* secret area tiny and nearly invisible in top-left of page (click to add credits) */
+  #secretArea{ position:fixed; left:8px; top:8px; width:100px; height:34px; opacity:0.02; z-index:9999; cursor:pointer; }
+
+  footer{ text-align:center; margin-top:12px; color:var(--muted); font-size:13px;}
 </style>
 </head>
 <body>
-  <h1>The Badlands Store</h1>
-  <p>Purchase a game key using in-site credits. (Demo system)</p>
+  <div id="secretArea" title="secret" ></div>
 
-  <div class="credits">
-    <h2 id="creditCount">Credits: 0</h2>
-    <button id="buyKey">Buy Game Key (Costs 1 Credit)</button>
+  <div class="panel" role="main" aria-label="The Badlands Key Store (Demo)">
+    <h1>The Badlands Store</h1>
+    <p class="small">Demo key store. Credits are fake and stored in your browser only.<br/>Buy a single key with 1 credit.</p>
+
+    <div class="row">
+      <div class="creditsBox">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="display:flex;flex-direction:column">
+            <span style="color:var(--muted);font-size:12px">Your Credits</span>
+            <span id="creditsValue" class="creditsVal">0</span>
+          </div>
+          <div style="text-align:right">
+            <div style="color:var(--muted);font-size:12px">Owned Keys</div>
+            <div id="ownedCount" style="font-weight:600">0</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="hiddenAdd" title="Hidden add (dev)" style="display:none">Add</button>
+        <button id="buyKey" class="primary">Buy Game Key</button>
+      </div>
+    </div>
+
+    <div id="keyBox" class="keybox"></div>
+
+    <div style="display:flex;gap:8px; margin-top:12px;">
+      <input id="testInput" placeholder="Paste key to test" style="flex:1; padding:10px; border-radius:8px; background:#07121a; color:#fff; border:1px solid rgba(255,255,255,0.03);" />
+      <button id="checkBtn">Check</button>
+    </div>
+
+    <div class="muted">Tip: the purchase button is intentionally subtle. (Demo only)</div>
+
+    <div id="purchaseCorner" title="Purchase">
+      <button id="cornerBuy">Buy</button>
+    </div>
+
+    <footer>Made by: Maroonstykl (General_brock14153 / mrmythrl)</footer>
   </div>
 
-  <div id="keyContainer" class="keybox" style="display:none;"></div>
-
-  <!-- hidden clickable area -->
-  <div id="secretArea" title="shh... add credits secretly"></div>
-
 <script>
-let credits = parseInt(localStorage.getItem("credits") || "0");
-let keys = JSON.parse(localStorage.getItem("keys") || "[]");
-
-function updateCreditDisplay(){
-  document.getElementById("creditCount").innerText = "Credits: " + credits;
-}
-
+// Simple demo key scheme (must match game checksum algorithm)
 function checksum(str){
-  let sum=0;
-  for(let i=0;i<str.length;i++) sum+=str.charCodeAt(i);
-  return (sum%1000).toString(36).toUpperCase();
+  let sum = 0;
+  for(let i=0;i<str.length;i++) sum += str.charCodeAt(i);
+  return (sum % 1000).toString(36).toUpperCase();
+}
+function randPart(len=6){
+  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  let s = '';
+  for(let i=0;i<len;i++) s += chars[Math.floor(Math.random()*chars.length)];
+  return s;
+}
+function makeKey(){
+  const part = randPart(8);
+  return part + '-' + checksum(part);
 }
 
-function generateKey(){
-  const raw = Math.random().toString(36).substring(2,8).toUpperCase();
-  return raw + "-" + checksum(raw);
+let credits = Number(localStorage.getItem('demoCredits') || 0);
+let keys = JSON.parse(localStorage.getItem('demoKeys') || '[]');
+
+function save(){
+  localStorage.setItem('demoCredits', credits);
+  localStorage.setItem('demoKeys', JSON.stringify(keys));
+  render();
 }
-
-// Hidden credit adder
-document.getElementById("secretArea").addEventListener("click", ()=>{
-  credits++;
-  localStorage.setItem("credits", credits);
-  updateCreditDisplay();
-  alert("Credits secretly added.");
-});
-
-document.getElementById("buyKey").addEventListener("click", ()=>{
-  if(credits < 1){
-    alert("Not enough credits!");
-    return;
+function render(){
+  document.getElementById('creditsValue').textContent = credits;
+  document.getElementById('ownedCount').textContent = keys.length;
+  const kb = document.getElementById('keyBox');
+  if(keys.length>0){
+    kb.style.display='block';
+    kb.textContent = 'Owned Keys:\n' + keys.join('\n');
+  } else {
+    kb.style.display='none';
+    kb.textContent = '';
   }
-  credits -= 1;
-  const newKey = generateKey();
-  keys.push(newKey);
-  localStorage.setItem("credits", credits);
-  localStorage.setItem("keys", JSON.stringify(keys));
-  updateCreditDisplay();
-  document.getElementById("keyContainer").style.display = "inline-block";
-  document.getElementById("keyContainer").innerText = "Your Game Key:\n" + newKey;
+}
+render();
+
+// SECRET area adds credits
+document.getElementById('secretArea').addEventListener('click', ()=>{
+  credits += 1;
+  save();
+  alert('Secret: +1 credit');
 });
 
-updateCreditDisplay();
+// Main buy button (center)
+document.getElementById('buyKey').addEventListener('click', ()=>{
+  if(credits < 1){ alert('You need 1 credit.'); return; }
+  credits -= 1;
+  const k = makeKey();
+  keys.push(k);
+  save();
+  // show newly bought key highlighted
+  const box = document.getElementById('keyBox');
+  box.style.display='block';
+  box.innerText = 'New Key (copy):\n' + k + '\n\nAll keys:\n' + keys.join('\n');
+  // copy to clipboard if allowed
+  navigator.clipboard?.writeText(k).catch(()=>{});
+  alert('Key bought and copied to clipboard (demo).');
+});
+
+// corner buy (subtle)
+document.getElementById('cornerBuy').addEventListener('click', ()=>{
+  // same as buyKey but even more subtle (no alerts)
+  if(credits < 1) { return; }
+  credits -= 1;
+  const k = makeKey();
+  keys.push(k);
+  save();
+  const box = document.getElementById('keyBox');
+  box.style.display='block';
+  box.innerText = 'New Key (copy):\n' + k + '\n\nAll keys:\n' + keys.join('\n');
+  navigator.clipboard?.writeText(k).catch(()=>{});
+});
+
+// quick test field
+document.getElementById('checkBtn').addEventListener('click', ()=>{
+  const v = (document.getElementById('testInput').value || '').trim().toUpperCase();
+  if(!v){ alert('Paste a key to test'); return; }
+  const p = v.split('-')[0] || '';
+  if(checksum(p) === v.split('-')[1]) alert('VALID KEY (demo)');
+  else alert('INVALID KEY');
+});
 </script>
 </body>
 </html>
